@@ -10,7 +10,8 @@ from ou_noise import OUNoise
 from critic_network import CriticNetwork 
 from actor_network_bn import ActorNetwork
 from replay_buffer import ReplayBuffer
-
+tf.compat.v1.disable_eager_execution()
+tf.compat.v1.disable_v2_behavior()
 # Hyper Parameters:
 
 REPLAY_BUFFER_SIZE = 1000000
@@ -29,7 +30,7 @@ class DDPG:
         self.state_dim = env.observation_space.shape[0]
         self.action_dim = env.action_space.shape[0]
 
-        self.sess = tf.InteractiveSession()
+        self.sess = tf.compat.v1.InteractiveSession()
 
         self.actor_network = ActorNetwork(self.sess,self.state_dim,self.action_dim)
         self.critic_network = CriticNetwork(self.sess,self.state_dim,self.action_dim)
@@ -60,10 +61,11 @@ class DDPG:
         y_batch = []  
         for i in range(len(minibatch)): 
             if done_batch[i]:
-                y_batch.append(reward_batch[i])
+                y_batch.append([reward_batch[i]])
             else :
                 y_batch.append(reward_batch[i] + GAMMA * q_value_batch[i])
-        y_batch = np.resize(y_batch,[BATCH_SIZE,1])
+        # for elem in y_batch: print(elem)
+        y_batch = np.resize(np.array(y_batch),[BATCH_SIZE,1])
         # Update critic by minimizing the loss L
         self.critic_network.train(y_batch,state_batch,action_batch)
 

@@ -1,7 +1,9 @@
 gym==0.26.2
 matplotlib==3.8.0
-numpy
-tensorflow==2.16.1
+numpy==1.24.3
+tensorflow==2.13.0
 protobuf==3.20.3
 packaging==23.2
-tf_slim
+tf_slim==1.1.0
+moviepy
+mujoco

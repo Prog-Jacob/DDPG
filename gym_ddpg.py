@@ -1,27 +1,27 @@
 import filter_env
 from ddpg import *
 import gc
-from gym.wrappers import Monitor
+from gym.wrappers import RecordEpisodeStatistics
 
 gc.enable()
 
-ENV_NAME = 'InvertedPendulum-v2'
+ENV_NAME = 'InvertedPendulum-v4'
 EPISODES = 100000
 TEST = 10
 
 def main():
     env = gym.make(ENV_NAME)
-    env = Monitor(env, "./monitor", force=True)  # Path to save videos/logs
+    env = RecordEpisodeStatistics(env)
+    env.reset()
     env = filter_env.makeFilteredEnv(env)
     agent = DDPG(env)
     print(env)
-    env.monitor.start('experiments/' + ENV_NAME,force=True)
 
     for episode in range(EPISODES):
-        state = env.reset()
+        state, info = env.reset()
         #print "episode:",episode
         # Train
-        for step in range(env.spec.timestep_limit):
+        for step in range(env.spec.max_episode_steps):
             action = agent.noise_action(state)
             next_state,reward,done,_ = env.step(action)
             agent.perceive(state,action,reward,next_state,done)
@@ -32,8 +32,8 @@ def main():
         if (episode % 100 == 0 and episode > 100):
             total_reward = 0
             for i in range(TEST):
-                state = env.reset()
-                for j in range(env.spec.timestep_limit):
+                state, info = env.reset()
+                for j in range(env.spec.max_episode_steps):
                     #env.render()
                     action = agent.action(state) # direct action for test
                     state,reward,done,_ = env.step(action)

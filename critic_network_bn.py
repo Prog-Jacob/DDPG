@@ -32,16 +32,16 @@ class CriticNetwork:
 		self.create_training_method()
 
 		# initialization 
-		self.sess.run(tf.initialize_all_variables())
+		self.sess.run(tf.compat.v1.initialize_all_variables())
 			
 		self.update_target()
 
 	def create_training_method(self):
 		# Define training optimizer
-		self.y_input = tf.placeholder("float",[None,1])
+		self.y_input = tf.compat.v1.placeholder("float",[None,1])
 		weight_decay = tf.add_n([L2 * tf.nn.l2_loss(var) for var in self.net])
 		self.cost = tf.reduce_mean(tf.square(self.y_input - self.q_value_output)) + weight_decay
-		self.optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
+		self.optimizer = tf.compat.v1.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
 		self.action_gradients = tf.gradients(self.q_value_output,self.action_input)
 
 	def create_q_network(self,state_dim,action_dim):
@@ -49,17 +49,17 @@ class CriticNetwork:
 		layer1_size = LAYER1_SIZE
 		layer2_size = LAYER2_SIZE
 
-		state_input = tf.placeholder("float",[None,state_dim])
-		action_input = tf.placeholder("float",[None,action_dim])
-		is_training = tf.placeholder(tf.bool)
+		state_input = tf.compat.v1.placeholder("float",[None,state_dim])
+		action_input = tf.compat.v1.placeholder("float",[None,action_dim])
+		is_training = tf.compat.v1.placeholder(tf.bool)
 
 		W1 = self.variable([state_dim,layer1_size],state_dim)
 		b1 = self.variable([layer1_size],state_dim)
 		W2 = self.variable([layer1_size,layer2_size],layer1_size+action_dim)
 		W2_action = self.variable([action_dim,layer2_size],layer1_size+action_dim)
 		b2 = self.variable([layer2_size],layer1_size+action_dim)
-		W3 = tf.Variable(tf.random_uniform([layer2_size,1],-3e-3,3e-3))
-		b3 = tf.Variable(tf.random_uniform([1],-3e-3,3e-3))
+		W3 = tf.Variable(tf.random.uniform([layer2_size,1],-3e-3,3e-3))
+		b3 = tf.Variable(tf.random.uniform([1],-3e-3,3e-3))
 
 		layer0_bn = self.batch_norm_layer(state_input,training_phase=is_training,scope_bn='q_batch_norm_0',activation=tf.identity)
 
@@ -70,9 +70,9 @@ class CriticNetwork:
 		return state_input,action_input,q_value_output,[W1,b1,W2,W2_action,b2,W3,b3],is_training
 
 	def create_target_q_network(self,state_dim,action_dim,net):
-		state_input = tf.placeholder("float",[None,state_dim])
-		action_input = tf.placeholder("float",[None,action_dim])
-		is_training = tf.placeholder(tf.bool)
+		state_input = tf.compat.v1.placeholder("float",[None,state_dim])
+		action_input = tf.compat.v1.placeholder("float",[None,action_dim])
+		is_training = tf.compat.v1.placeholder(tf.bool)
 
 		ema = tf.train.ExponentialMovingAverage(decay=1-TAU)
 		target_update = ema.apply(net)
@@ -119,7 +119,7 @@ class CriticNetwork:
 
 	# f fan-in size
 	def variable(self,shape,f):
-		return tf.Variable(tf.random_uniform(shape,-1/math.sqrt(f),1/math.sqrt(f)))
+		return tf.Variable(tf.random.uniform(shape,-1/math.sqrt(f),1/math.sqrt(f)))
 
 	def batch_norm_layer(self,x,training_phase,scope_bn,activation=None):
 		return tf.cond(training_phase, 
@@ -142,4 +142,3 @@ class CriticNetwork:
 		print 'save critic-network...',time_step
 		self.saver.save(self.sess, 'saved_critic_networks/' + 'critic-network', global_step = time_step)
 '''
-		
